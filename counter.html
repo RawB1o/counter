@@ -15,7 +15,7 @@
 </head>
 <body>
 
- <div id="counter" style="visibility:hidden">0000</div>
+ <div id="counter" style="visibility:hidden">----</div>
 
  <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -32,23 +32,27 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
 const counterRef = doc(db, "counters", "views");
 const counterEl = document.getElementById("counter");
 
-const WAIT_TIME = 7000;   // 7 seconds on page
-const COOLDOWN = 60000;   // 1 minute
+const WAIT_TIME = 7000;      // 7 seconds
+const COOLDOWN = 60000;      // 1 minute
 const STORAGE_KEY = "lastViewTime";
 
-/* 1️⃣ SHOW COUNT IMMEDIATELY */
-const snap = await getDoc(counterRef);
-if (snap.exists()) {
-  counterEl.textContent = String(snap.data().count).padStart(4, "0");
-} else {
-  await setDoc(counterRef, { count: 2020 });
-  counterEl.textContent = "2020";
-}
+/* 🔹 STEP 1: SHOW CURRENT COUNT IMMEDIATELY */
+(async () => {
+  const snap = await getDoc(counterRef);
+  if (snap.exists()) {
+    counterEl.textContent = String(snap.data().count).padStart(4, "0");
+  } else {
+    await setDoc(counterRef, { count: 2020 });
+    counterEl.textContent = "2020";
+  }
+  counterEl.style.visibility = "visible";
+})();
 
-/* 2️⃣ INCREMENT AFTER TIME DELAY */
+/* 🔹 STEP 2: INCREMENT LATER */
 setTimeout(async () => {
   const lastTime = Number(localStorage.getItem(STORAGE_KEY));
   const now = Date.now();
@@ -56,10 +60,10 @@ setTimeout(async () => {
   if (lastTime && now - lastTime < COOLDOWN) return;
 
   await updateDoc(counterRef, { count: increment(1) });
-  counterEl.textContent = String(snap.data().count + 1).padStart(4, "0");
   localStorage.setItem(STORAGE_KEY, now);
 }, WAIT_TIME);
 </script>
+
 
 
 
