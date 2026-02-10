@@ -36,29 +36,35 @@ const db = getFirestore(app);
 const counterRef = doc(db, "counters", "views");
 const counterEl = document.getElementById("counter");
 
-counterEl.textContent = "----"; // always show something
+// Always show something immediately
+counterEl.textContent = "----";
 
-// 1️⃣ SHOW current count immediately
-try {
-  const snap = await getDoc(counterRef);
-  if (snap.exists()) {
-    counterEl.textContent = String(snap.data().count).padStart(4, "0");
+async function runCounter() {
+  // 1️⃣ Show current count instantly
+  try {
+    const snap = await getDoc(counterRef);
+    if (snap.exists()) {
+      counterEl.textContent = String(snap.data().count).padStart(4, "0");
+    }
+  } catch (e) {
+    counterEl.textContent = "ERR";
+    console.error(e);
+    return;
   }
-} catch (e) {
-  counterEl.textContent = "ERR";
-  console.error(e);
+
+  // 2️⃣ Increment after 7 seconds
+  setTimeout(async () => {
+    try {
+      await updateDoc(counterRef, { count: increment(1) });
+      const snap = await getDoc(counterRef);
+      counterEl.textContent = String(snap.data().count).padStart(4, "0");
+    } catch (e) {
+      console.error(e);
+    }
+  }, 7000);
 }
 
-// 2️⃣ Increment after 7 seconds
-setTimeout(async () => {
-  try {
-    await updateDoc(counterRef, { count: increment(1) });
-    const snap = await getDoc(counterRef);
-    counterEl.textContent = String(snap.data().count).padStart(4, "0");
-  } catch (e) {
-    console.error(e);
-  }
-}, 7000);
+runCounter();
 </script>
 
 
