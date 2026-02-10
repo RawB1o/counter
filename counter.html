@@ -17,55 +17,50 @@
 
   <div id="counter">0000</div>
 
-  <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+ <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAveLcSSzFHZGXf_IFJJHIEOcr9MNYPpz8",
-    authDomain: "bobsviewcounter.firebaseapp.com",
-    projectId: "bobsviewcounter",
-    storageBucket: "bobsviewcounter.firebasestorage.app",
-    messagingSenderId: "252976492549",
-    appId: "1:252976492549:web:6f62441a5e39945a01ec6c",
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyAveLcSSzFHZGXf_IFJJHIEOcr9MNYPpz8",
+  authDomain: "bobsviewcounter.firebaseapp.com",
+  projectId: "bobsviewcounter",
+  storageBucket: "bobsviewcounter.firebasestorage.app",
+  messagingSenderId: "252976492549",
+  appId: "1:252976492549:web:6f62441a5e39945a01ec6c",
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const counterRef = doc(db, "counters", "views");
-  const counterEl = document.getElementById("counter");
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const counterRef = doc(db, "counters", "views");
+const counterEl = document.getElementById("counter");
 
-  const WAIT_TIME = 7000;        // 7 seconds on page
-  const COOLDOWN = 60000;        // 1 minute between counts
-  const STORAGE_KEY = "lastViewTime";
+const WAIT_TIME = 7000;   // 7 seconds on page
+const COOLDOWN = 60000;   // 1 minute
+const STORAGE_KEY = "lastViewTime";
 
-  setTimeout(async () => {
-    const lastTime = Number(localStorage.getItem(STORAGE_KEY));
-    const now = Date.now();
+/* 1️⃣ SHOW COUNT IMMEDIATELY */
+const snap = await getDoc(counterRef);
+if (snap.exists()) {
+  counterEl.textContent = String(snap.data().count).padStart(4, "0");
+} else {
+  await setDoc(counterRef, { count: 2020 });
+  counterEl.textContent = "2020";
+}
 
-    if (lastTime && now - lastTime < COOLDOWN) {
-      // Too soon — just show current count
-      const snap = await getDoc(counterRef);
-      if (snap.exists()) {
-        counterEl.textContent = String(snap.data().count).padStart(4, "0");
-      }
-      return;
-    }
+/* 2️⃣ INCREMENT AFTER TIME DELAY */
+setTimeout(async () => {
+  const lastTime = Number(localStorage.getItem(STORAGE_KEY));
+  const now = Date.now();
 
-    const snap = await getDoc(counterRef);
+  if (lastTime && now - lastTime < COOLDOWN) return;
 
-    if (snap.exists()) {
-      await updateDoc(counterRef, { count: increment(1) });
-      const newValue = snap.data().count + 1;
-      counterEl.textContent = String(newValue).padStart(4, "0");
-    } else {
-      await setDoc(counterRef, { count: 2020 });
-      counterEl.textContent = "2020";
-    }
-
-    localStorage.setItem(STORAGE_KEY, now);
-  }, WAIT_TIME);
+  await updateDoc(counterRef, { count: increment(1) });
+  counterEl.textContent = String(snap.data().count + 1).padStart(4, "0");
+  localStorage.setItem(STORAGE_KEY, now);
+}, WAIT_TIME);
 </script>
+
 
 
 </body>
